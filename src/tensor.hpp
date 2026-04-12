@@ -1,28 +1,35 @@
 #pragma once
 
-#include <cstddef>
 #include <vector>
 #include <cassert>
 #include <span>
+#include <memory>
 
 #include "details.hpp"
+#include "aligned_allocator.hpp"
+
+//TODO: надо добавить перегруженный оператор умножения и добавить в тензор всё, что мы изучили на плюсах
 
 namespace attention {
-    class Tensor {
+    template <typename Allocator = std::allocator<float>>
+    class BasicTensor {
     public:
-        Tensor(const std::size_t batches, const std::size_t rows, const std::size_t cols)
+        using allocator_type = Allocator;
+
+        BasicTensor(const std::size_t batches, const std::size_t rows, const std::size_t cols,
+                    const Allocator& alloc = Allocator())
             : batches_count_(batches), rows_count_(rows), cols_count_(cols),
-              data_(batches * rows * cols, 0.0f) {
+              data_(batches * rows * cols, 0, alloc) {
         }
 
-        Tensor(Tensor&&) noexcept = default;
-        Tensor& operator=(Tensor&&) noexcept = default;
+        BasicTensor(BasicTensor&&) noexcept = default;
+        BasicTensor& operator=(BasicTensor&&) noexcept = default;
 
     private:
-        Tensor(const Tensor& other) = default;
+        BasicTensor(const BasicTensor& other) = default;
 
     public:
-        [[nodiscard]] Tensor clone() const {
+        [[nodiscard]] BasicTensor clone() const {
             return {*this};
         }
 
@@ -52,12 +59,12 @@ namespace attention {
     public:
         [[nodiscard]] std::span<float> getBatchView(const std::size_t batch_idx) noexcept {
             assert(batch_idx < batches() && details::kMsgBatchIndexOutOfRange);
-            return {data() + get_batch_offset(batch_idx), batch_stride()};
+            return {data() + get_batch_offset(batch_idx), batch_size()};
         }
 
         [[nodiscard]] std::span<const float> getBatchView(const std::size_t batch_idx) const noexcept {
             assert(batch_idx < batches() && details::kMsgBatchIndexOutOfRange);
-            return {data() + get_batch_offset(batch_idx), batch_stride()};
+            return {data() + get_batch_offset(batch_idx), batch_size()};
         }
 
     public:
@@ -73,8 +80,8 @@ namespace attention {
         [[nodiscard]] std::size_t size()    const noexcept { return data_.size(); }
 
     public:
-        [[nodiscard]] Tensor transposed() const {
-            Tensor result(batches(), cols(), rows());
+        [[nodiscard]] BasicTensor transposed() const {
+            BasicTensor result(batches(), cols(), rows(), data_.get_allocator());
 
             for (std::size_t b_idx = 0; b_idx < batches(); ++b_idx) {
                 for (std::size_t r_idx = 0; r_idx < rows(); ++r_idx) {
@@ -104,14 +111,14 @@ namespace attention {
         [[nodiscard]] std::size_t get_index(const std::size_t batch_idx,
                               const std::size_t row_idx,
                               const std::size_t col_idx) const noexcept {
-            return batch_idx * batch_stride() + row_idx * cols() + col_idx;
+            return batch_idx * batch_size() + row_idx * cols() + col_idx;
         }
 
         [[nodiscard]] std::size_t get_batch_offset(const std::size_t batch_idx) const noexcept {
-            return batch_idx * batch_stride();
+            return batch_idx * batch_size();
         }
 
-        [[nodiscard]] std::size_t batch_stride() const noexcept {
+        [[nodiscard]] std::size_t batch_size() const noexcept {
             return rows() * cols();
         }
 
@@ -120,6 +127,8 @@ namespace attention {
         std::size_t rows_count_    = 0;
         std::size_t cols_count_    = 0;
 
-        std::vector<float> data_;
+        std::vector<float, Allocator> data_;
     };
+
+    using Tensor = BasicTensor<AlignedAllocator<float, details::kAlignment>>;
 }
