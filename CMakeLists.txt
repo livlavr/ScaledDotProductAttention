@@ -5,15 +5,26 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_library(attention_lib STATIC)
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Debug)
+endif()
 
-target_sources(attention_lib PRIVATE
-        src/matrix_multiplication.cpp
-)
+if(CMAKE_BUILD_TYPE STREQUAL "Release")
+    if(MSVC)
+        add_compile_options(/O2 /arch:AVX2)
+    else()
+        add_compile_options(-O3 -march=native -funroll-loops)
+    endif()
+    add_definitions(-DNDEBUG)
+endif()
+
+add_library(attention_lib STATIC src/matrix_multiplication.cpp)
+add_library(attention::core ALIAS attention_lib)
 
 target_include_directories(attention_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
-add_library(attention::core ALIAS attention_lib)
+add_executable(benchmark_run benchmarks/benchmark.cpp)
+target_link_libraries(benchmark_run PRIVATE attention::core)
 
 enable_testing()
 add_subdirectory(tests)

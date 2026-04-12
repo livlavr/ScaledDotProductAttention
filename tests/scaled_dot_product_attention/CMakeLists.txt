@@ -1,12 +1,10 @@
-add_executable(scaled_dot_product_attention_tests
-    tests.cpp
-)
+add_executable(unit_tests tests.cpp)
 
-target_link_libraries(scaled_dot_product_attention_tests
-    PRIVATE
-    scaled_dot_product_attention
-    gtest_main
+target_link_libraries(unit_tests
+        PRIVATE
+        attention::core
+        gtest_main
 )
 
 include(GoogleTest)
-gtest_discover_tests(scaled_dot_product_attention_tests)
+gtest_discover_tests(unit_tests)
