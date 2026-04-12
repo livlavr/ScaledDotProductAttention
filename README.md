@@ -1,7 +1,7 @@
 # Оптимизация функции Attention
 
 <figure style="text-align: center; max-width: 60%; margin: 20px auto;">
-  <img src="img_1.png" alt="Блок-схема Scaled Dot-Product Attention" style="width: 100%; height: auto;">
+  <img src="common/attention_logo.png" alt="Блок-схема Scaled Dot-Product Attention" style="width: 100%; height: auto;">
   </figcaption>
 </figure>
 
@@ -95,7 +95,7 @@ $$Attention(Q, K, V) = softmax\left(\frac{Q K^T}{\sqrt{d_k}}\right) V$$
 Алгоритм **Scaled Dot-Product Attention** можно представить в виде последовательности операций:
 
 <figure style="text-align: center; max-width: 30%; margin: 20px auto;">
-  <img src="img.png" alt="Блок-схема Scaled Dot-Product Attention" style="width: 100%; height: auto;">
+  <img src="common/attention_scheme.png" alt="Блок-схема Scaled Dot-Product Attention" style="width: 100%; height: auto;">
 
   <figcaption style="margin-top: 10px; font-style: italic; color: #555;">
     Источник: статья "Attention Is All You Need" [1]
