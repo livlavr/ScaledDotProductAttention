@@ -10,12 +10,8 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-    if(MSVC)
-        add_compile_options(/O2 /arch:AVX2)
-    else()
         add_compile_options(-O3 -march=native -funroll-loops)
-    endif()
-    add_definitions(-DNDEBUG)
+        add_definitions(-DNDEBUG)
 endif()
 
 add_library(attention_lib STATIC src/matrix_multiplication.cpp)
