@@ -11,5 +11,4 @@ namespace attention::details {
     static constexpr auto kMsgMatMulInnerDimMismatch = "Inner dimensions must match (K-dimension mismatch)";
     static constexpr auto kMsgMatMulOutputDimMismatch = "Output tensor dimensions mismatch";
     static constexpr auto kMsgMatMulAliasingDetected = "Input and Result tensors share the same memory";
-
 }

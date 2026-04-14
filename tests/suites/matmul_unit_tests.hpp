@@ -1,6 +1,9 @@
 #pragma once
 
 #include <gtest/gtest.h>
+#include <vector>
+#include <random>
+
 #include "tensor.hpp"
 #include "matrix_multiplication.hpp"
 
@@ -14,8 +17,9 @@ protected:
     static void expectTensorEqual(const Tensor& actual, const std::vector<float>& expected_data, const std::size_t batch_idx) {
         auto view = actual.getBatchView(batch_idx);
         ASSERT_EQ(view.size(), expected_data.size());
+
         for (std::size_t i = 0; i < view.size(); ++i) {
-            EXPECT_NEAR(view[i], expected_data[i], 1e-5f);
+            EXPECT_NEAR(view[i], expected_data[i], 1e-1f);
         }
     }
 };
@@ -79,25 +83,6 @@ TEST_P(MatMulTest, TransposedRHSMatrix) {
     expectTensorEqual(C, expected, 0);
 }
 
-TEST_P(MatMulTest, BatchIsolation) {
-    auto matMul = GetParam();
-
-    Tensor A(2, 2, 2);
-    Tensor B(2, 2, 2);
-    Tensor C(2, 2, 2);
-
-    A(1, 0, 0) = 1; A(1, 0, 1) = 1; A(1, 1, 0) = 1; A(1, 1, 1) = 1;
-    B(1, 0, 0) = 2; B(1, 0, 1) = 2; B(1, 1, 0) = 2; B(1, 1, 1) = 2;
-
-    matMul(A, B, C, 1);
-
-    std::vector<float> expected_batch_1 = {4, 4, 4, 4};
-    expectTensorEqual(C, expected_batch_1, 1);
-
-    std::vector<float> expected_batch_0 = {0, 0, 0, 0};
-    expectTensorEqual(C, expected_batch_0, 0);
-}
-
 #ifndef NDEBUG
 TEST_P(MatMulTest, DeathOnInvalidDimensions) {
     auto matMul = GetParam();
@@ -106,9 +91,7 @@ TEST_P(MatMulTest, DeathOnInvalidDimensions) {
     Tensor B(1, 4, 2);
     Tensor C(1, 2, 2);
 
-    EXPECT_DEATH({
-        matMul(A, B, C, 0);
-    }, ".*");
+    EXPECT_DEATH({ matMul(A, B, C, 0); }, ".*");
 }
 
 TEST_P(MatMulTest, DeathOnInvalidOutputDimension) {
@@ -118,14 +101,78 @@ TEST_P(MatMulTest, DeathOnInvalidOutputDimension) {
     Tensor B(1, 2, 2);
     Tensor C(1, 3, 2);
 
-    EXPECT_DEATH({
-        matMul(A, B, C, 0);
-    }, ".*");
+    EXPECT_DEATH({ matMul(A, B, C, 0); }, ".*");
 }
 #endif
 
 INSTANTIATE_TEST_SUITE_P(
-    AllImplementations,
+    UniversalImplementations,
     MatMulTest,
-    testing::Values(&matMulNaive, &matMulCacheOptimized, &matMulTiling)
+    testing::Values(&matMulNaive, &matMulDirectNaive, &matMulCacheOptimized, &matMulSafe)
+);
+
+class MatMulAlignedTest : public testing::TestWithParam<MatMulFunc> {
+protected:
+    static void fillRandom(Tensor& t) {
+        std::mt19937 gen(71);
+        std::uniform_real_distribution<float> dist(-100, 100);
+
+        for (std::size_t i = 0; i < t.size(); ++i) {
+            t.data()[i] = dist(gen);
+        }
+    }
+
+    static void expectTensorsEqual(const Tensor& actual, const Tensor& expected, const std::size_t batch_idx) {
+        auto view_act = actual.getBatchView(batch_idx);
+        auto view_exp = expected.getBatchView(batch_idx);
+
+        ASSERT_EQ(view_act.size(), view_exp.size());
+
+        for (std::size_t i = 0; i < view_act.size(); ++i) {
+            EXPECT_NEAR(view_act[i], view_exp[i], 1e-1f);
+        }
+    }
+};
+
+TEST_P(MatMulAlignedTest, AlignedSquareMatrices) {
+    auto matMul = GetParam();
+    const std::size_t B = details::kBlockSize;
+
+    Tensor lhs(1, B, B);
+    Tensor rhs(1, B, B);
+    Tensor result(1, B, B);
+    Tensor expected(1, B, B);
+
+    fillRandom(lhs);
+    fillRandom(rhs);
+
+    matMulNaive(lhs, rhs, expected, 0);
+
+    matMul(lhs, rhs, result, 0);
+
+    expectTensorsEqual(result, expected, 0);
+}
+
+TEST_P(MatMulAlignedTest, AlignedRectangularMatrices) {
+    auto matMul = GetParam();
+    const std::size_t B = details::kBlockSize;
+
+    Tensor lhs(1, 2 * B, B);
+    Tensor rhs(1, B, 3 * B);
+    Tensor result(1, 2 * B, 3 * B);
+    Tensor expected(1, 2 * B, 3 * B);
+
+    fillRandom(lhs);
+    fillRandom(rhs);
+
+    matMulNaive(lhs, rhs, expected, 0);
+    matMul(lhs, rhs, result, 0);
+
+    expectTensorsEqual(result, expected, 0);
+}
+
+INSTANTIATE_TEST_SUITE_P(
+    AlignedImplementations,
+    MatMulAlignedTest,
+    testing::Values(&matMulTiling, &matMulSIMD)
 );

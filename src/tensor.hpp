@@ -8,25 +8,28 @@
 #include "details.hpp"
 #include "aligned_allocator.hpp"
 
-//TODO: надо добавить перегруженный оператор умножения и добавить в тензор всё, что мы изучили на плюсах
-
 namespace attention {
-    template <typename Allocator = std::allocator<float>>
+    template<typename Allocator = std::allocator<float> >
     class BasicTensor {
     public:
         using allocator_type = Allocator;
 
+        using iterator = std::vector<float, Allocator>::iterator;
+        using const_iterator = std::vector<float, Allocator>::const_iterator;
+        using value_type = float;
+
         BasicTensor(const std::size_t batches, const std::size_t rows, const std::size_t cols,
-                    const Allocator& alloc = Allocator())
+                    const Allocator &alloc = Allocator())
             : batches_count_(batches), rows_count_(rows), cols_count_(cols),
               data_(batches * rows * cols, 0, alloc) {
         }
 
-        BasicTensor(BasicTensor&&) noexcept = default;
-        BasicTensor& operator=(BasicTensor&&) noexcept = default;
+        BasicTensor(BasicTensor &&) noexcept = default;
+
+        BasicTensor &operator=(BasicTensor &&) noexcept = default;
 
     private:
-        BasicTensor(const BasicTensor& other) = default;
+        BasicTensor(const BasicTensor &other) = default;
 
     public:
         [[nodiscard]] BasicTensor clone() const {
@@ -38,9 +41,9 @@ namespace attention {
                           const std::size_t row_idx,
                           const std::size_t col_idx) noexcept {
             assert(batch_idx < batches() &&
-                   row_idx < rows() &&
-                   col_idx < cols() &&
-                   details::kMsgIndexOutOfRange);
+                row_idx < rows() &&
+                col_idx < cols() &&
+                details::kMsgIndexOutOfRange);
 
             return data_[get_index(batch_idx, row_idx, col_idx)];
         }
@@ -49,9 +52,9 @@ namespace attention {
                                 const std::size_t row_idx,
                                 const std::size_t col_idx) const noexcept {
             assert(batch_idx < batches() &&
-                   row_idx < rows() &&
-                   col_idx < cols() &&
-                   details::kMsgIndexOutOfRange);
+                row_idx < rows() &&
+                col_idx < cols() &&
+                details::kMsgIndexOutOfRange);
 
             return data_[get_index(batch_idx, row_idx, col_idx)];
         }
@@ -67,6 +70,15 @@ namespace attention {
             return {data() + get_batch_offset(batch_idx), batch_size()};
         }
 
+        iterator begin() noexcept { return data_.begin(); }
+        iterator end() noexcept { return data_.end(); }
+
+        const_iterator begin() const noexcept { return data_.begin(); }
+        const_iterator end() const noexcept { return data_.end(); }
+
+        const_iterator cbegin() const noexcept { return data_.cbegin(); }
+        const_iterator cend() const noexcept { return data_.cend(); }
+
     public:
         [[nodiscard]] float *data() noexcept { return data_.data(); }
         [[nodiscard]] const float *data() const noexcept { return data_.data(); }
@@ -75,9 +87,9 @@ namespace attention {
         static constexpr std::size_t rank() noexcept { return details::kDefaultRank; }
 
         [[nodiscard]] std::size_t batches() const noexcept { return batches_count_; }
-        [[nodiscard]] std::size_t rows()    const noexcept { return rows_count_; }
-        [[nodiscard]] std::size_t cols()    const noexcept { return cols_count_; }
-        [[nodiscard]] std::size_t size()    const noexcept { return data_.size(); }
+        [[nodiscard]] std::size_t rows() const noexcept { return rows_count_; }
+        [[nodiscard]] std::size_t cols() const noexcept { return cols_count_; }
+        [[nodiscard]] std::size_t size() const noexcept { return data_.size(); }
 
     public:
         [[nodiscard]] BasicTensor transposed() const {
@@ -109,8 +121,8 @@ namespace attention {
 
     private:
         [[nodiscard]] std::size_t get_index(const std::size_t batch_idx,
-                              const std::size_t row_idx,
-                              const std::size_t col_idx) const noexcept {
+                                            const std::size_t row_idx,
+                                            const std::size_t col_idx) const noexcept {
             return batch_idx * batch_size() + row_idx * cols() + col_idx;
         }
 
@@ -124,11 +136,11 @@ namespace attention {
 
     private:
         std::size_t batches_count_ = 0;
-        std::size_t rows_count_    = 0;
-        std::size_t cols_count_    = 0;
+        std::size_t rows_count_ = 0;
+        std::size_t cols_count_ = 0;
 
         std::vector<float, Allocator> data_;
     };
 
-    using Tensor = BasicTensor<AlignedAllocator<float, details::kAlignment>>;
+    using Tensor = BasicTensor<AlignedAllocator<float, details::kAlignment> >;
 }

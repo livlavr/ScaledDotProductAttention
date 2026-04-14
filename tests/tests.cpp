@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "suites/matmul_unit_tests.hpp"
-#include "suites/tensor_unit_tests.hpp"
+#include "matmul_unit_tests.hpp"
+#include "tensor_unit_tests.hpp"
 
 
 int main(int argc, char** argv) {

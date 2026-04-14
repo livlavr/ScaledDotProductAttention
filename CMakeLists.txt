@@ -10,11 +10,17 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-        add_compile_options(-O3 -march=native -funroll-loops)
-        add_definitions(-DNDEBUG)
+    add_compile_options(-O3 -funroll-loops)
+    add_definitions(-DNDEBUG)
 endif()
 
-add_library(attention_lib STATIC src/matrix_multiplication.cpp)
+add_compile_options(-march=native -mavx2 -mfma)
+
+add_library(attention_lib STATIC
+        src/matrix_multiplication.cpp
+        src/attention.cpp
+)
+
 add_library(attention::core ALIAS attention_lib)
 
 target_include_directories(attention_lib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/src)
