@@ -3,8 +3,8 @@
 namespace attention::details {
     static inline constexpr std::size_t kDefaultRank = 3;
 
-    static inline constexpr std::size_t kAlignment = 128;
-    constexpr std::size_t kBlockSize = 128;
+    static inline constexpr std::size_t kAlignment = 64;
+    constexpr std::size_t kBlockSize = 160; //48, 64, 160
 
     static constexpr auto kMsgIndexOutOfRange = "Index out of range";
     static constexpr auto kMsgBatchIndexOutOfRange = "Batch index out of range";
