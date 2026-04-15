@@ -1,5 +1,7 @@
+#include <cassert>
+#include <span>
+#include <stdexcept>
 #include <algorithm>
-#include <exception>
 #include <string>
 #include <immintrin.h>
 

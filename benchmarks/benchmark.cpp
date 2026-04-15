@@ -1,15 +1,15 @@
-#include <iostream>
-#include <chrono>
-#include <vector>
-#include <random>
-#include <iomanip>
-#include <string>
-#include <functional>
 #include <algorithm>
+#include <chrono>
+#include <functional>
+#include <iomanip>
+#include <iostream>
+#include <random>
+#include <string>
+#include <vector>
 
-#include "tensor.hpp"
-#include "matrix_multiplication.hpp"
 #include "attention.hpp"
+#include "matrix_multiplication.hpp"
+#include "tensor.hpp"
 
 using namespace attention;
 using namespace attention::matmul;
@@ -69,8 +69,8 @@ int main() {
         const int iters_fast = (N >= 1024) ? 2 : 10;
         const int iters_slow = (N >= 512) ? 2 : 10;
 
-        run_benchmark("1. Naive (operator())", N, iters_slow, [&]() { matMulNaive(A, B, C, 0); });
-        run_benchmark("2. Direct Naive (Ptr)", N, iters_slow, [&]() { matMulDirectNaive(A, B, C, 0); });
+        // run_benchmark("1. Naive (operator())", N, iters_slow, [&]() { matMulNaive(A, B, C, 0); });
+        // run_benchmark("2. Direct Naive (Ptr)", N, iters_slow, [&]() { matMulDirectNaive(A, B, C, 0); });
         run_benchmark("3. Cache Optimized", N, iters_fast, [&]() { matMulCacheOptimized(A, B, C, 0); });
         run_benchmark("4. Tiling (Block=160)", N, iters_fast, [&]() { matMulTiling(A, B, C, 0); });
         run_benchmark("5. SIMD", N, iters_fast, [&]() { matMulSIMD(A, B, C, 0); });

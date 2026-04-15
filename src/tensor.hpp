@@ -60,12 +60,12 @@ namespace attention {
         }
 
     public:
-        [[nodiscard]] std::span<float> getBatchView(const std::size_t batch_idx) noexcept {
+        [[nodiscard]] std::span<float> getBatchView(const std::size_t batch_idx) {
             assert(batch_idx < batches() && details::kMsgBatchIndexOutOfRange);
             return {data() + get_batch_offset(batch_idx), batch_size()};
         }
 
-        [[nodiscard]] std::span<const float> getBatchView(const std::size_t batch_idx) const noexcept {
+        [[nodiscard]] std::span<const float> getBatchView(const std::size_t batch_idx) const {
             assert(batch_idx < batches() && details::kMsgBatchIndexOutOfRange);
             return {data() + get_batch_offset(batch_idx), batch_size()};
         }

@@ -1,9 +1,10 @@
 #pragma once
 
 #include "tensor.hpp"
-#include "matrix_multiplication.hpp"
 
 namespace attention {
+    namespace matmul { enum class MatMulType; }
+
     Tensor attentionWithMatmul(
         const Tensor &Q,
         const Tensor &K,
